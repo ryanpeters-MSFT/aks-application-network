@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: demo
+  name: default
   labels:
     topology: appscluster
     istio.io/dataplane-mode: ambient
@@ -10,7 +10,6 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: website
-  namespace: demo
   labels:
     topology: appscluster
 ---
@@ -18,7 +17,6 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: webapi
-  namespace: demo
   labels:
     topology: appscluster
 ---
@@ -26,7 +24,6 @@ apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
   name: default
-  namespace: demo
   labels:
     topology: appscluster
 spec:
@@ -37,7 +34,6 @@ apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
   name: webapi-allow-website
-  namespace: demo
   labels:
     topology: appscluster
 spec:
@@ -49,21 +45,21 @@ spec:
   - from:
     - source:
         principals:
-        - cluster.local/ns/demo/sa/website
+        - cluster.local/ns/default/sa/website
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: website
-  namespace: demo
   labels:
     topology: appscluster
     app: website
 spec:
+  type: LoadBalancer
   ports:
   - name: http
     port: 80
-    targetPort: 80
+    targetPort: 8080
   selector:
     app: website
 ---
@@ -71,7 +67,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: website
-  namespace: demo
   labels:
     topology: appscluster
 spec:
@@ -92,14 +87,13 @@ spec:
         - name: WEBAPI_URL
           value: webapi
         ports:
-        - containerPort: 80
+        - containerPort: 8080
         resources: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: webapi
-  namespace: demo
   labels:
     topology: appscluster
     app: webapi
@@ -108,7 +102,7 @@ spec:
   ports:
   - name: http
     port: 80
-    targetPort: 80
+    targetPort: 8080
   selector:
     app: webapi
 ---
@@ -116,7 +110,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: webapi-v1
-  namespace: demo
   labels:
     topology: appscluster
 spec:
@@ -136,13 +129,13 @@ spec:
       - name: webapi
         image: binarydad/webapi
         ports:
-        - containerPort: 80
+        - containerPort: 8080
         resources: {}
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: demo
+  name: default
   labels:
     topology: servicescluster
     istio.io/dataplane-mode: ambient
@@ -151,7 +144,6 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: webapi
-  namespace: demo
   labels:
     topology: servicescluster
 ---
@@ -159,7 +151,6 @@ apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
   name: default
-  namespace: demo
   labels:
     topology: servicescluster
 spec:
@@ -170,7 +161,6 @@ apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
   name: webapi-allow-website
-  namespace: demo
   labels:
     topology: servicescluster
 spec:
@@ -182,13 +172,12 @@ spec:
   - from:
     - source:
         principals:
-        - cluster.local/ns/demo/sa/website
+        - cluster.local/ns/default/sa/website
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: webapi
-  namespace: demo
   labels:
     topology: servicescluster
     app: webapi
@@ -197,7 +186,7 @@ spec:
   ports:
   - name: http
     port: 80
-    targetPort: 80
+    targetPort: 8080
   selector:
     app: webapi
 ---
@@ -205,7 +194,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: webapi-v2
-  namespace: demo
   labels:
     topology: servicescluster
 spec:
@@ -225,5 +213,5 @@ spec:
       - name: webapi
         image: binarydad/webapi
         ports:
-        - containerPort: 80
+        - containerPort: 8080
         resources: {}
