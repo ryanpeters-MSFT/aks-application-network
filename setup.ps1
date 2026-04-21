@@ -11,6 +11,9 @@ $servicesVnet = "servicesVnet"
 $appsSubnet = "aks"
 $servicesSubnet = "aks"
 
+# fetch user id for role assignment
+$userId = az ad signed-in-user show -o tsv --query id
+
 # register preview bits
 az feature register --namespace Microsoft.AppLink --name PublicPreview --subscription $subscription
 az provider register --namespace Microsoft.AppLink --subscription $subscription
@@ -33,11 +36,24 @@ $appsSubnetId = az network vnet subnet show -g $group --vnet-name $appsVnet -n $
 $servicesSubnetId = az network vnet subnet show -g $group --vnet-name $servicesVnet -n $servicesSubnet --query id -o tsv
 
 # create aks clusters in separate vnets
-az aks create -g $group -n $appsCluster -l $location --enable-aad --enable-oidc-issuer --enable-managed-identity --generate-ssh-keys --network-plugin azure --vnet-subnet-id $appsSubnetId --node-count 1 --tier free
-az aks create -g $group -n $servicesCluster -l $location --enable-aad --enable-oidc-issuer --enable-managed-identity --generate-ssh-keys --network-plugin azure --vnet-subnet-id $servicesSubnetId --node-count 1 --tier free
+$appsClusterId = az aks create -g $group -n $appsCluster -l $location --enable-aad --enable-azure-rbac --enable-oidc-issuer --enable-managed-identity --generate-ssh-keys --network-plugin azure --vnet-subnet-id $appsSubnetId --node-count 1 --tier free --query id -o tsv
+$servicesClusterId = az aks create -g $group -n $servicesCluster -l $location --enable-aad --enable-azure-rbac --enable-oidc-issuer --enable-managed-identity --generate-ssh-keys --network-plugin azure --vnet-subnet-id $servicesSubnetId --node-count 1 --tier free --query id -o tsv
+
+# assign current user admin RBAC access to cluster apps cluster
+az role assignment create `
+    --assignee $userId `
+    --role "Azure Kubernetes Service RBAC Cluster Admin" `
+    --scope $appsClusterId
+
+# assign current user admin RBAC access to cluster services cluster
+az role assignment create `
+    --assignee $userId `
+    --role "Azure Kubernetes Service RBAC Cluster Admin" `
+    --scope $servicesClusterId
 
 # create app network and join both clusters
 az appnet create -g $group -n $appnet -l $location --identity-type SystemAssigned
+az appnet wait -g $group -n $appnet --created
 $appsClusterId = az aks show -g $group -n $appsCluster --query id -o tsv
 $servicesClusterId = az aks show -g $group -n $servicesCluster --query id -o tsv
 az appnet member join -g $group --appnet-name $appnet --member-name $appsMember --member-resource-id $appsClusterId --upgrade-mode SelfManaged
@@ -46,3 +62,6 @@ az appnet member join -g $group --appnet-name $appnet --member-name $servicesMem
 # fetch kube contexts
 az aks get-credentials -g $group -n $appsCluster --overwrite-existing --context $appsCluster
 az aks get-credentials -g $group -n $servicesCluster --overwrite-existing --context $servicesCluster
+
+# convert kubeconfigs to use azure cli for auth
+kubelogin convert-kubeconfig -l azurecli
