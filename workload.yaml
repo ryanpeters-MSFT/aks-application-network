@@ -47,6 +47,19 @@ spec:
         principals:
         - cluster.local/ns/default/sa/website
 ---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: website-allow-plaintext
+  labels:
+    topology: appscluster
+spec:
+  selector:
+    matchLabels:
+      app: website
+  mtls:
+    mode: PERMISSIVE
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -59,7 +72,7 @@ spec:
   ports:
   - name: http
     port: 80
-    targetPort: 8080
+    targetPort: 80
   selector:
     app: website
 ---
@@ -85,9 +98,9 @@ spec:
         image: binarydad/website
         env:
         - name: WEBAPI_URL
-          value: webapi
+          value: http://webapi
         ports:
-        - containerPort: 8080
+        - containerPort: 80
         resources: {}
 ---
 apiVersion: v1
@@ -98,39 +111,15 @@ metadata:
     topology: appscluster
     app: webapi
     istio.io/global: "true"
+    istio.io/use-waypoint: waypoint
 spec:
   ports:
   - name: http
     port: 80
-    targetPort: 8080
+    targetPort: 80
   selector:
     app: webapi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: webapi-v1
-  labels:
-    topology: appscluster
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: webapi
-      version: v1
-  template:
-    metadata:
-      labels:
-        app: webapi
-        version: v1
-    spec:
-      serviceAccountName: webapi
-      containers:
-      - name: webapi
-        image: binarydad/webapi
-        ports:
-        - containerPort: 8080
-        resources: {}
+    version: remote
 ---
 apiVersion: v1
 kind: Namespace
@@ -173,6 +162,7 @@ spec:
     - source:
         principals:
         - cluster.local/ns/default/sa/website
+        - cluster.local/ns/default/sa/waypoint
 ---
 apiVersion: v1
 kind: Service
@@ -182,11 +172,12 @@ metadata:
     topology: servicescluster
     app: webapi
     istio.io/global: "true"
+    istio.io/use-waypoint: waypoint
 spec:
   ports:
   - name: http
     port: 80
-    targetPort: 8080
+    targetPort: 80
   selector:
     app: webapi
 ---
@@ -213,5 +204,5 @@ spec:
       - name: webapi
         image: binarydad/webapi
         ports:
-        - containerPort: 8080
+        - containerPort: 80
         resources: {}

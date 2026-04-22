@@ -65,3 +65,9 @@ az aks get-credentials -g $group -n $servicesCluster --overwrite-existing --cont
 
 # convert kubeconfigs to use azure cli for auth
 kubelogin convert-kubeconfig -l azurecli
+
+# enroll the default namespace in ambient mode and apply a waypoint in each cluster
+kubectl --context $appsCluster label namespace default istio.io/dataplane-mode=ambient --overwrite
+kubectl --context $servicesCluster label namespace default istio.io/dataplane-mode=ambient --overwrite
+istioctl --context $appsCluster waypoint apply --enroll-namespace --wait --overwrite
+istioctl --context $servicesCluster waypoint apply --enroll-namespace --wait --overwrite
