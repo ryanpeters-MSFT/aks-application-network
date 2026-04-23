@@ -6,9 +6,9 @@ The deployed architecture is:
 
 - `website` runs in `appscluster` and is exposed through a `LoadBalancer`
 - `webapi` runs in both `appscluster` and `servicescluster`
-- both `webapi` Services are marked global and use the namespace waypoint
-- cross-cluster load balancing is handled by Azure Kubernetes Application Network and Istio ambient mode
-- strict mTLS is enabled by default, with narrow `AuthorizationPolicy` rules allowing only the expected callers
+- Both `webapi` Services are marked global and use the namespace waypoint
+- Cross-cluster load balancing is handled by Azure Kubernetes Application Network and Istio ambient mode
+- Strict mTLS is enabled by default, with narrow `AuthorizationPolicy` rules allowing only the expected callers
 
 ## Deploy the environment
 
@@ -56,7 +56,7 @@ kubectl --context appscluster get svc website -w
 
 Open the website service's external IP once it is assigned.
 
-`istioctl zc service` should show `webapi` with two VIPs and `ENDPOINTS 2/2`.
+`istioctl zc service` should show `webapi` with two VIPs and `ENDPOINTS 2/2`. The two service VIPs listed are the known IPs of the `webapi` service pods in both clusters. 
 
 ## Istioctl commands used here
 
