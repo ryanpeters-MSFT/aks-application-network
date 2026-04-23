@@ -1,0 +1,9 @@
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  labels:
+    topology: servicescluster
+spec:
+  mtls:
+    mode: STRICT

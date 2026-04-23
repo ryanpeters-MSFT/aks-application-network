@@ -28,11 +28,11 @@ The deployed architecture is:
 ## Deploy the workloads
 
 ```powershell
-# deploy the appscluster slice
-kubectl --context appscluster apply -f .\workload.yaml -l topology=appscluster
+# deploy the appscluster manifests
+kubectl --context appscluster apply -f .\appscluster\.
 
-# deploy the servicescluster slice
-kubectl --context servicescluster apply -f .\workload.yaml -l topology=servicescluster
+# deploy the servicescluster manifests
+kubectl --context servicescluster apply -f .\servicescluster\.
 
 # verify the shared webapi service exists in both clusters
 kubectl --context appscluster get svc webapi
@@ -57,6 +57,11 @@ kubectl --context appscluster get svc website -w
 Open the website service's external IP once it is assigned.
 
 `istioctl zc service` should show `webapi` with two VIPs and `ENDPOINTS 2/2`.
+
+## Istioctl commands used here
+
+- `istioctl waypoint apply --enroll-namespace --wait --overwrite` creates or refreshes the namespace waypoint and enrolls the namespace to use it for L7 processing.
+- `istioctl --context appscluster zc service -n applink-system` shows the ambient service view from `appscluster`, including VIPs, waypoints, and merged backend counts.
 
 ## Rejoin a cluster to AppNet
 

@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+  labels:
+    topology: appscluster
+    istio.io/dataplane-mode: ambient
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: website
+  labels:
+    topology: appscluster
+    app: website
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  selector:
+    app: website
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: website
+  labels:
+    topology: appscluster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: website
+  template:
+    metadata:
+      labels:
+        app: website
+    spec:
+      serviceAccountName: website
+      containers:
+      - name: website
+        image: binarydad/website
+        env:
+        - name: WEBAPI_URL
+          value: http://webapi
+        ports:
+        - containerPort: 8080
+        resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapi
+  labels:
+    topology: appscluster
+    app: webapi
+    istio.io/global: "true"
+    istio.io/use-waypoint: waypoint
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  selector:
+    app: webapi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapi-v1
+  labels:
+    topology: appscluster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapi
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: webapi
+        version: v1
+    spec:
+      serviceAccountName: webapi
+      containers:
+      - name: webapi
+        image: binarydad/webapi
+        ports:
+        - containerPort: 8080
+        resources: {}
