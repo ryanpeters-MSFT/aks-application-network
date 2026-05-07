@@ -1,7 +1,7 @@
 $subscription = az account show --query id -o tsv
 $location = "eastus2"
-$group = "rg-appnetdemo"
-$appnet = "appnetdemo"
+$group = "rg-aks-appnet"
+$appnet = "appnet"
 $appsCluster = "appscluster"
 $servicesCluster = "servicescluster"
 $appsMember = "appsmember"
