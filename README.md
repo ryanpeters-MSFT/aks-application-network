@@ -69,8 +69,8 @@ Open the website service's external IP once it is assigned.
 
 ```powershell
 $subscription = az account show --query id -o tsv
-$group = "rg-appnetdemo"
-$appnet = "appnetdemo"
+$group = "rg-aks-appnet"
+$appnet = "appnet"
 $servicesCluster = "servicescluster"
 $servicesMember = "servicesmember"
 $servicesClusterId = az aks show -g $group -n $servicesCluster --query id -o tsv
