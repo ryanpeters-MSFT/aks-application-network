@@ -133,14 +133,16 @@ az appnet member join `
     --appnet-name $appnet `
     --member-name $appsMember `
     --member-resource-id $appsClusterId `
-    --upgrade-mode SelfManaged
+    --upgrade-mode SelfManaged `
+    --version 1.4
 
 az appnet member join `
     -g $group `
     --appnet-name $appnet `
     --member-name $servicesMember `
     --member-resource-id $servicesClusterId `
-    --upgrade-mode SelfManaged
+    --upgrade-mode SelfManaged `
+    --version 1.4
 
 # fetch kube contexts for both clusters so kubectl and istioctl can address them by name
 az aks get-credentials -g $group -n $appsCluster --overwrite-existing --context $appsCluster
