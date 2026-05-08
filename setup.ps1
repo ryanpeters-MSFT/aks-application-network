@@ -25,7 +25,6 @@ az provider register `
     --subscription $subscription
 
 az extension add --name appnet-preview --upgrade
-az account set -s $subscription
 
 # create the shared resource group that holds both clusters, both VNets, and AppNet
 az group create -n $group -l $location
